@@ -1,7 +1,8 @@
 package com.example.restocknotification.product.application;
 
 import com.example.restocknotification.product.domain.Product;
-import com.example.restocknotification.product.domain.ProductRestockNotificationEvent;
+import com.example.restocknotification.product.domain.ResendRestockNotificationEvent;
+import com.example.restocknotification.product.domain.RestockNotificationEvent;
 import com.example.restocknotification.product.domain.ProductSoldOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class ProductService {
         // 재입고 수량 100으로 가정
         product.increaseStock(100);
 
-        eventPublisher.publishEvent(new ProductRestockNotificationEvent(product));
+        eventPublisher.publishEvent(new RestockNotificationEvent(product));
     }
 
     @Transactional
@@ -39,4 +40,9 @@ public class ProductService {
 
     }
 
+    public void resendRestockNotification(Long productId) {
+        Product product = productRepository.findById(productId);
+
+        eventPublisher.publishEvent(new ResendRestockNotificationEvent(product));
+    }
 }

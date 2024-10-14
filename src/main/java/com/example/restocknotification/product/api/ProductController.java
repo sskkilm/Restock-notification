@@ -17,4 +17,9 @@ public class ProductController {
         productService.restock(productId);
     }
 
+    @PostMapping("/admin/products/{productId}/notifications/re-stock")
+    public void resendRestockNotification(@PathVariable Long productId) {
+        productService.resendRestockNotification(productId);
+    }
+
 }
