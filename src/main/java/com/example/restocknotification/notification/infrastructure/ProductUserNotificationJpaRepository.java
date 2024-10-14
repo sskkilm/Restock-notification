@@ -12,12 +12,10 @@ import java.util.List;
 @Repository
 public interface ProductUserNotificationJpaRepository extends JpaRepository<ProductUserNotification, Long> {
 
-    @Query("select pun from ProductUserNotification pun where pun.product = :product and pun.isActivated = true")
+    @Query("select pun " +
+            "from ProductUserNotification pun " +
+            "where pun.product = :product and pun.isActivated = true " +
+            "order by pun.user.id")
     List<ProductUserNotification> findAllByProductAndActivated(@Param("product") Product product);
-
-    @Query("select pun from ProductUserNotification pun where pun.product = :product and pun.user.id > :userId and pun.isActivated = true")
-    List<ProductUserNotification> findAllByProductAndActivatedUserIdGreaterThan(
-            @Param("product") Product product, @Param("userId") Long userId
-    );
 
 }
