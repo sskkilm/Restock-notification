@@ -5,6 +5,7 @@ import com.example.restocknotification.common.observer.SoldOutProductObserver;
 import com.example.restocknotification.notification.application.repository.ProductNotificationHistoryRepository;
 import com.example.restocknotification.notification.application.repository.ProductUserNotificationHistoryRepository;
 import com.example.restocknotification.notification.application.repository.ProductUserNotificationRepository;
+import com.example.restocknotification.notification.domain.NotificationDetails;
 import com.example.restocknotification.notification.domain.NotificationSender;
 import com.example.restocknotification.notification.domain.entity.ProductNotificationHistory;
 import com.example.restocknotification.notification.domain.entity.ProductUserNotification;
@@ -38,16 +39,24 @@ public class NotificationService {
     public void sendRestockNotification(Product product) {
         ProductNotificationHistory productHistory = ProductNotificationHistory.create(product, IN_PROGRESS);
 
-        List<User> users = getUsersForSendingRestockNotification(product);
-        try {
-            sendRestockNotificationToUsers(product, users);
+        List<User> users = getActivatedUsersForSendingRestockNotification(product);
 
-            productHistory.updateStatus(COMPLETED);
+        NotificationDetails details = new NotificationDetails();
+        try {
+            sendRestockNotificationToUsers(product, users, details);
+
+            details.updateStatus(COMPLETED);
         } catch (SoldOutException e) {
-            productHistory.updateStatus(CANCELED_BY_SOLD_OUT);
+            log.info("{}", "notification canceled: " + CANCELED_BY_SOLD_OUT);
+
+            details.updateStatus(CANCELED_BY_SOLD_OUT);
         } catch (Exception e) {
-            productHistory.updateStatus(CANCELED_BY_ERROR);
+            log.info("{}", "notification canceled: " + CANCELED_BY_ERROR);
+
+            details.updateStatus(CANCELED_BY_ERROR);
         } finally {
+            productHistory.updateDetails(details);
+
             productNotificationHistoryRepository.save(productHistory);
         }
     }
@@ -56,21 +65,28 @@ public class NotificationService {
     public void resendRestockNotification(Product product) {
         ProductNotificationHistory productHistory = productNotificationHistoryRepository.findByProduct(product);
 
-        Long lastReceivedUserId = getLastReceivedUserId(product);
-        List<User> nonReceivedUsers = getUsersWhoHaveNotReceivedNotification(product, lastReceivedUserId);
+        Long lastReceivedUserId = productHistory.getLastReceivedUserId();
+        List<User> users = getActivatedUsersWhoHaveNotReceivedNotification(product, lastReceivedUserId);
 
+        NotificationDetails details = new NotificationDetails();
         try {
-            sendRestockNotificationToUsers(product, nonReceivedUsers);
+            sendRestockNotificationToUsers(product, users, details);
 
-            productHistory.updateStatus(COMPLETED);
+            details.updateStatus(COMPLETED);
         } catch (SoldOutException e) {
-            productHistory.updateStatus(CANCELED_BY_SOLD_OUT);
+            log.info("{}", "notification canceled: " + CANCELED_BY_SOLD_OUT);
+
+            details.updateStatus(CANCELED_BY_SOLD_OUT);
         } catch (Exception e) {
-            productHistory.updateStatus(CANCELED_BY_ERROR);
+            log.info("{}", "notification canceled: " + CANCELED_BY_ERROR);
+
+            details.updateStatus(CANCELED_BY_ERROR);
+        } finally {
+            productHistory.updateDetails(details);
         }
     }
 
-    private void sendRestockNotificationToUsers(Product product, List<User> users) throws InterruptedException {
+    private void sendRestockNotificationToUsers(Product product, List<User> users, NotificationDetails details) throws InterruptedException {
         long rateLimitStartTime = System.currentTimeMillis();
 
         int sentCount = 0;
@@ -88,6 +104,8 @@ public class NotificationService {
             ProductUserNotificationHistory productUserHistory = ProductUserNotificationHistory.create(product, user);
             productUserNotificationHistoryRepository.save(productUserHistory);
 
+            details.updateLastReceivedUserId(user.getId());
+
             if (sentCount % BATCH_SIZE == 0) {
                 long rateLimitEndTime = System.currentTimeMillis();
 
@@ -101,30 +119,15 @@ public class NotificationService {
         }
     }
 
-    private List<User> getUsersForSendingRestockNotification(Product product) {
-        List<ProductUserNotification> productUserNotifications = productUserNotificationRepository.findAllByProduct(product);
+    private List<User> getActivatedUsersForSendingRestockNotification(Product product) {
+        List<ProductUserNotification> productUserNotifications = productUserNotificationRepository.findAllByProductAndActivated(product);
         return productUserNotifications.stream().map(ProductUserNotification::getUser).toList();
     }
 
-    private Long getLastReceivedUserId(Product product) {
-        List<User> receivedUsers = getUsersWhoReceivedNotification(product);
-        if (receivedUsers.isEmpty()) {
-            return -1L;
-        }
-
-        return receivedUsers.get(receivedUsers.size() - 1).getId();
-    }
-
-    private List<User> getUsersWhoReceivedNotification(Product product) {
-        List<ProductUserNotificationHistory> productUserNotificationHistories =
-                productUserNotificationHistoryRepository.findAllByProduct(product);
-        return productUserNotificationHistories.stream().map(ProductUserNotificationHistory::getUser).toList();
-    }
-
-    private List<User> getUsersWhoHaveNotReceivedNotification(Product product, Long lastReceivedUserId) {
+    private List<User> getActivatedUsersWhoHaveNotReceivedNotification(Product product, Long lastReceivedUserId) {
         List<ProductUserNotification> productUserNotifications =
                 productUserNotificationRepository
-                        .findAllByProductAndUserIdGreaterThan(product, lastReceivedUserId);
+                        .findAllByProductAndActivatedUserIdGreaterThan(product, lastReceivedUserId);
         return productUserNotifications.stream().map(ProductUserNotification::getUser).toList();
     }
 }

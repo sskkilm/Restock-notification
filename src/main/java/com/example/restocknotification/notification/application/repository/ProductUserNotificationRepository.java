@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ProductUserNotificationRepository {
 
-    List<ProductUserNotification> findAllByProduct(Product product);
+    List<ProductUserNotification> findAllByProductAndActivated(Product product);
 
-    List<ProductUserNotification> findAllByProductAndUserIdGreaterThan(Product product, Long lastReceivedUserId);
+    List<ProductUserNotification> findAllByProductAndActivatedUserIdGreaterThan(Product product, Long lastReceivedUserId);
 }

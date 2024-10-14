@@ -16,13 +16,13 @@ public class ProductUserNotificationRepositoryImpl implements ProductUserNotific
     private final ProductUserNotificationJpaRepository productUserNotificationJpaRepository;
 
     @Override
-    public List<ProductUserNotification> findAllByProduct(Product product) {
-        return productUserNotificationJpaRepository.findAllByProduct(product);
+    public List<ProductUserNotification> findAllByProductAndActivated(Product product) {
+        return productUserNotificationJpaRepository.findAllByProductAndActivated(product);
     }
 
     @Override
-    public List<ProductUserNotification> findAllByProductAndUserIdGreaterThan(Product product, Long lastReceivedUserId) {
-        return productUserNotificationJpaRepository.findAllByProductAndUserIdGreaterThan(product, lastReceivedUserId);
+    public List<ProductUserNotification> findAllByProductAndActivatedUserIdGreaterThan(Product product, Long lastReceivedUserId) {
+        return productUserNotificationJpaRepository.findAllByProductAndActivatedUserIdGreaterThan(product, lastReceivedUserId);
     }
 
 }

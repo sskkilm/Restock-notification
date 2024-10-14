@@ -1,5 +1,6 @@
 package com.example.restocknotification.notification.domain.entity;
 
+import com.example.restocknotification.notification.domain.NotificationDetails;
 import com.example.restocknotification.notification.domain.ProductNotificationStatus;
 import com.example.restocknotification.product.domain.Product;
 import jakarta.persistence.*;
@@ -31,8 +32,9 @@ public class ProductNotificationHistory {
         return new ProductNotificationHistory(null, product, status, null);
     }
 
-    public void updateStatus(ProductNotificationStatus status) {
-        this.status = status;
+    public void updateDetails(NotificationDetails details) {
+        this.status = details.getStatus();
+        this.lastReceivedUserId = details.getLastReceivedUserId();
     }
 
 }
