@@ -7,12 +7,17 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class ProductUserNotificationHistory extends BaseTimeEntity {
+@EntityListeners(AuditingEntityListener.class)
+public class ProductUserNotificationHistory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +31,11 @@ public class ProductUserNotificationHistory extends BaseTimeEntity {
     @JoinColumn(name = "userId")
     private User user;
 
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime sentAt;
+
     public static ProductUserNotificationHistory create(Product product, User user) {
-        return new ProductUserNotificationHistory(null, product, user);
+        return new ProductUserNotificationHistory(null, product, user, null);
     }
 }
