@@ -1,12 +1,9 @@
 package com.example.restocknotification.product.application;
 
+import com.example.restocknotification.common.observer.ProductSoldOutObserver;
 import com.example.restocknotification.product.domain.Product;
-import com.example.restocknotification.product.domain.ResendRestockNotificationEvent;
-import com.example.restocknotification.product.domain.RestockNotificationEvent;
-import com.example.restocknotification.product.domain.ProductSoldOutEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,17 +13,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final ProductSoldOutObserver observer;
 
     @Transactional
-    public void restock(Long productId) {
+    public Product restock(Long productId) {
         Product product = productRepository.findById(productId);
 
         product.increaseRestockCount();
         // 재입고 수량 100으로 가정
         product.increaseStock(100);
 
-        eventPublisher.publishEvent(new RestockNotificationEvent(product));
+        observer.remove(product.getId());
+
+        return product;
     }
 
     @Transactional
@@ -35,14 +34,12 @@ public class ProductService {
 
         product.decreaseStock(quantity);
         if (product.isSoldOut()) {
-            eventPublisher.publishEvent(new ProductSoldOutEvent(product));
+            observer.save(productId);
         }
 
     }
 
-    public void resendRestockNotification(Long productId) {
-        Product product = productRepository.findById(productId);
-
-        eventPublisher.publishEvent(new ResendRestockNotificationEvent(product));
+    public Product findById(Long productId) {
+        return productRepository.findById(productId);
     }
 }

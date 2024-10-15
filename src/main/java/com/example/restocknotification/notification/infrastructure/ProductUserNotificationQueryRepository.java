@@ -1,7 +1,6 @@
 package com.example.restocknotification.notification.infrastructure;
 
-import com.example.restocknotification.notification.domain.entity.ProductUserNotification;
-import com.example.restocknotification.product.domain.Product;
+import com.example.restocknotification.productusernotification.infrastructure.entity.ProductUserNotificationEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static com.example.restocknotification.notification.domain.entity.QProductUserNotification.productUserNotification;
+import static com.example.restocknotification.productusernotification.infrastructure.entity.QProductUserNotificationEntity.productUserNotificationEntity;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,25 +17,22 @@ public class ProductUserNotificationQueryRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
 
-    public List<ProductUserNotification> findAllByProductAndActivatedUserIdGreaterThan(Product product, Long userId) {
-
+    public List<ProductUserNotificationEntity> findAllByProductIdAndActivatedGreaterThanLastUserId(Long productId, Long lastUserId) {
         return jpaQueryFactory
-                .selectFrom(productUserNotification)
-                .where(productEq(product), userIdGreaterThan(userId), isActivated())
-                .orderBy(productUserNotification.user.id.asc())
+                .selectFrom(productUserNotificationEntity)
+                .where(productIdEq(productId), userIdGreaterThan(lastUserId), isActivated())
                 .fetch();
     }
 
-    private BooleanExpression productEq(Product product) {
-        return product != null ? productUserNotification.product.eq(product) : null;
+    private BooleanExpression productIdEq(Long productId) {
+        return productId != null ? productUserNotificationEntity.productEntity.id.eq(productId) : null;
     }
 
-    private BooleanExpression userIdGreaterThan(Long userId) {
-        return userId != null ? productUserNotification.user.id.gt(userId) : null;
+    private BooleanExpression userIdGreaterThan(Long lastUserId) {
+        return lastUserId != null ? productUserNotificationEntity.userEntity.id.gt(lastUserId) : null;
     }
 
     private BooleanExpression isActivated() {
-        return productUserNotification.isActivated;
+        return productUserNotificationEntity.isActivated;
     }
-
 }

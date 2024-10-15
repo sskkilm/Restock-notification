@@ -2,6 +2,7 @@ package com.example.restocknotification.product.infrastructure;
 
 import com.example.restocknotification.product.application.ProductRepository;
 import com.example.restocknotification.product.domain.Product;
+import com.example.restocknotification.product.infrastructure.entity.ProductEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -13,8 +14,9 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Product findById(Long id) {
-        return productJpaRepository.findById(id)
+        ProductEntity productEntity = productJpaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("product not found"));
+        return productEntity.toModel();
     }
-    
+
 }

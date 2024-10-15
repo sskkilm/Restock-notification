@@ -1,25 +1,17 @@
 package com.example.restocknotification.product.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
-@Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class Product {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long restockCount;
+    private int restockCount;
 
-    private Long stock;
+    private int stock;
 
     public void increaseRestockCount() {
         this.restockCount++;
@@ -36,7 +28,7 @@ public class Product {
     public void decreaseStock(Long quantity) {
         this.stock -= quantity;
         if (stock <= 0) {
-            stock = 0L;
+            stock = 0;
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.example.restocknotification.common.config;
 
-import com.example.restocknotification.common.observer.SoldOutProductObserver;
+import com.example.restocknotification.common.observer.ProductSoldOutObserver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ObserverConfig {
 
     @Bean
-    public SoldOutProductObserver soldOutProductObserver() {
-        return new SoldOutProductObserver(new ConcurrentHashMap<>());
+    public ProductSoldOutObserver soldOutProductObserver() {
+        return new ProductSoldOutObserver(new ConcurrentHashMap<>());
     }
 
 }
